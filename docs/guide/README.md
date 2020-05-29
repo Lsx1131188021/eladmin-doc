@@ -14,7 +14,7 @@
 :::
 
 ### 在线体验
-预览地址：[https://auauz.net/dashboard](https://auauz.net/dashboard)
+预览地址：[https://el-admin.xin](https://el-admin.xin)
 账号密码：admin/123456（所有账户都是一个密码）
 
 ### 项目源码

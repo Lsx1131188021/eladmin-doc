@@ -55,7 +55,7 @@ Consider defining a bean of type 'me.zhengjie.modules.system.service.mapper.User
 ## 关于项目如何使用 MyBatis-Plus
 ```Jpa```和 ```Mybatis``` 是可以共存的，只需要将mybatis整合进去，原有的代码不动，新的业务使用mybatis即可
 ## 关于系统如何放行部分接口
-[匿名访问接口](http://localhost:8080/guide/hdsc.html#匿名访问)
+[匿名访问接口](https://doc.el-admin.xin/guide/hdsc.html#%E6%8E%A5%E5%8F%A3%E6%9D%83%E9%99%90)
 ## 关于新增字段后出现的问题
 新增字段后容易出现 ```数据库中有数据，列表显示没有数据``` 这种错误，出现的原因可能是
 

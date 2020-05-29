@@ -41,7 +41,7 @@ module.exports = {
             { text: '指南', link: '/guide/'},
             { text: '捐赠', link: '/donation/'},
             { text: 'v2.4', link: '/version/V2.4/'},
-            { text: '体验', link: 'https://auauz.net'},
+            { text: '体验', link: 'https://el-admin.xin'},
             { text: '博客', link: 'https://www.ydyno.com/'},
             // 下拉列表
             {
