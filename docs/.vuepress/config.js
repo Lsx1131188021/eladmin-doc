@@ -1,30 +1,12 @@
 module.exports = {
     // 插件
     plugins: {
-        'vuepress-plugin-comment': {
-            choosen: 'valine',
-            // options选项中的所有参数，会传给Valine的配置
-            options: {
-                el: '#valine-vuepress-comment',
-                appId: 'slnTcOTAPQVydGNesVApRUcg-gzGzoHsz',
-                appKey: 'Aeusc62FpStk4K4yVAiFonnU'
-            }
-        },
         '@vuepress/back-to-top': {}
     },
     // 头部
     head: [
         ['meta', { name: 'viewport', content: 'width=device-width,initial-scale=1,user-scalable=no' }],
-        ['link', { rel: 'icon', href: '/logo/small.png' }],
-        ['script', {}, `
-        var _hmt = _hmt || [];
-        (function() {
-            var hm = document.createElement("script");
-            hm.src = "https://hm.baidu.com/hm.js?9dcf4bca9cc47caeef4caf5d5f982e86";
-            var s = document.getElementsByTagName("script")[0]; 
-            s.parentNode.insertBefore(hm, s);
-        })();
-      `]
+        ['link', { rel: 'icon', href: '/logo/small.png' }]
     ],
     // 网站标题及描述
     title: 'EL-ADMIN',
