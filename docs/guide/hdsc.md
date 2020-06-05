@@ -1,8 +1,9 @@
 # 后端手册
 ## 权限控制
-本系统权限控制采用 ```RBAC```思想。简单地说，一个用户拥有若干角色，每个角色拥有一个默认的权限，每一个角色拥有若干个菜单，菜单中存在按钮权限，这样，就构造成“用户-角色-菜单” 的授权模型。在这种模型中，用户与角色、角色与菜单之间构成了多对多的关系，如下图
+本系统权限控制采用 `RBAC` 思想。简单地说，一个用户拥有若干角色，每一个角色拥有若干个菜单，菜单中存在菜单权限与按钮权限，
+这样，就构造成“用户-角色-菜单” 的授权模型。在这种模型中，用户与角色、角色与菜单之间构成了多对多的关系，如下图
 
-![](https://i.loli.net/2019/11/01/mES5flJjUTtn9Yh.png)
+![](https://img.el-admin.xin/20200605134807.png)
 
 ### 权限控制
 本系统安全框架使用的是 ```Spring Security + Jwt Token```，
@@ -16,8 +17,10 @@ Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTU1ODk2N
 ###  数据交互
 用户登录 -> 后端验证登录返回 ```token``` -> 前端带上```token```请求后端数据 -> 后端返回数据，
 数据交互流程如下：
-![](https://i.loli.net/2019/03/28/5c9c93b996ace.png)
-###  接口权限
+
+![](https://img.el-admin.xin/20200605142356.png)
+
+###  权限注解
 ```Spring Security``` 提供了```Spring EL```表达式，允许我们在定义接口访问的方法上面添加注解，来控制访问权限，常用的 ```EL```如下
 
 <table>
@@ -39,7 +42,8 @@ Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTU1ODk2N
 </tbody>
 </table>
 
-下面的接口表示用户拥有 ```admin```、```menu:edit``` 权限中的任意一个就能能访问```update```方法，如果方法不加```@preAuthorize```注解，意味着所有用户都需要带上有效的 ```token``` 后能访问 ```update``` 方法
+下面的接口表示用户拥有 ```admin```、```menu:edit``` 权限中的任意一个就能能访问```update```方法，
+如果方法不加```@preAuthorize```注解，意味着所有用户都需要带上有效的 ```token``` 后能访问 ```update``` 方法
 ``` java
 @Log(description = "修改菜单")
 @PutMapping(value = "/menus")
@@ -48,7 +52,7 @@ public ResponseEntity update(@Validated @RequestBody Menu resources){
     // 略
 }
 ```
-#### 自定义权限验证
+
 由于每个接口都需要给超级管理员放行，而使用 `hasAnyRole('admin','user:list')` 每次都需要重复的添加 admin 权限，因此在新版本 (2.3) 中加入了自定义权限验证方式，在验证的时候默认给拥有admin权限的用户放行。
 
 **源码:**
@@ -59,7 +63,7 @@ public class ElPermissionConfig {
 
     public Boolean check(String ...permissions){
         // 获取当前用户的所有权限
-        List<String> elPermissions = SecurityUtils.getUserDetails().getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+        List<String> elPermissions = SecurityUtils.getCurrentUser().getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
         // 判断当前用户的所有权限是否包含接口上定义的权限
         return elPermissions.contains("admin") || Arrays.stream(permissions).anyMatch(elPermissions::contains);
     }
@@ -67,15 +71,30 @@ public class ElPermissionConfig {
 ```
 **使用方式：**
 ```java
-// 支持多权限验证
-@PreAuthorize("@el.check('user:list')") 
+@PreAuthorize("@el.check('user:list','user:add')") 
 ```
-### 匿名访问
+### 接口放行
+
 在我们使用的时候，有写接口是不需要验证权限，这个时候就需要我们给接口放行，使用方式如下
 
-**1、修改配置文件方式**
+**1、使用注解方式**
+
+只需要在Controller的方法上加入该注解即可
+
+``` java
+@AnonymousAccess
+```
+
+**2、修改配置文件方式**
 
 **eladmin-system -> modules -> security ->  config -> SecurityConfig**
+
+::: tip
+使用 ```permitAll()``` 方法所有人都能访问，包括带上 `token` 访问
+
+使用 ```anonymous()``` 所有人都能访问，但是带上 `token` 访问后会报错
+:::
+
 ``` java
 // 关键代码，部分略
 protected void configure(HttpSecurity httpSecurity) throws Exception {
@@ -88,24 +107,13 @@ protected void configure(HttpSecurity httpSecurity) throws Exception {
             .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
 }
 ```
-::: tip 注意
-使用 ```permitAll()``` 方法所有人都能访问，包括带上 `token` 访问
 
-使用 ```anonymous()``` 所有人都能访问，但是带上 `token` 访问后会报错
-:::
-
-**2、使用注解方式**
-
-``` java
-// 自定义匿名接口
-@AnonymousAccess
-```
 ## 通用查询
-本系统对 Jpa 的查询进行了封装，现可以通过 `@Query` 注解实现简单的查询与复杂查询
+本项目对 Jpa 的查询进行了封装，现可以通过 `@Query` 注解实现简单的查询与复杂查询
 
 简单查询：`等于(默认)、大于等于、小于等于、左模糊、右模糊、中模糊、多字段模糊、NOT_EQUAL 、BETWEEN 、NOT_NULL`。
 
-复杂查询：`包含（IN）查询、左连接、右连接`
+复杂查询：`包含（IN）查询、左连接、右连接等`
 
 ### 参数说明
 
@@ -192,198 +200,34 @@ public Object queryAll(QueryCriteria criteria, Pageable pageable){
 }
 ```
 ::: tip
-如果需要添加一个字段查询，只需要在查询类 `QueryCriteria` 中添加就可以了，可节省大量时间
+如果需要添加一个字段查询，只需要在查询类 `QueryCriteria` 中添加就可以了，可节省大量时间。
 
 源码可以查看 `eladmin-common` 模块中的 `me.zhengjie.annotation.Query` 与 `me.zhengjie.utils.QueryHelp`
 :::
 
 ## 系统缓存
-本系统缓存使用的是 ```redis```，默认使用 ```Spring``` 的注解对系统缓存进行操作，并且提供了可视化的 ```redis``` 缓存操作
+本系统缓存使用的是 ```Redis```，默认使用 ```Spring``` 的注解对系统缓存进行操作, 现版本优化了
 ### 配置缓存
-配置文件位于 ```eladmin-common``` 模块中的 `me.zhengjie.config.RedisConfig`，配置文件如下：
-``` java
-@Slf4j
-@Configuration
-@EnableCaching
-@ConditionalOnClass(RedisOperations.class)
-@EnableConfigurationProperties(RedisProperties.class)
-public class RedisConfig extends CachingConfigurerSupport {
-
-    /**
-     *  设置 redis 数据默认过期时间，默认2小时
-     *  设置@cacheable 序列化方式
-     */
-    @Bean
-    public RedisCacheConfiguration redisCacheConfiguration(){
-        FastJsonRedisSerializer<Object> fastJsonRedisSerializer = new FastJsonRedisSerializer<>(Object.class);
-        RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig();
-        configuration = configuration.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(fastJsonRedisSerializer)).entryTtl(Duration.ofHours(2));
-        return configuration;
-    }
-
-    @Bean(name = "redisTemplate")
-    @ConditionalOnMissingBean(name = "redisTemplate")
-    public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<Object, Object> template = new RedisTemplate<>();
-        //序列化
-        FastJsonRedisSerializer<Object> fastJsonRedisSerializer = new FastJsonRedisSerializer<>(Object.class);
-        // value值的序列化采用fastJsonRedisSerializer
-        template.setValueSerializer(fastJsonRedisSerializer);
-        template.setHashValueSerializer(fastJsonRedisSerializer);
-        // 全局开启AutoType
-        ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
-        // key的序列化采用StringRedisSerializer
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setConnectionFactory(redisConnectionFactory);
-        return template;
-    }
-
-    /**
-     * 自定义缓存key生成策略，默认将使用该策略
-     */
-    @Bean
-    @Override
-    public KeyGenerator keyGenerator() {
-        return (target, method, params) -> {
-            Map<String,Object> container = new HashMap<>();
-            Class<?> targetClassClass = target.getClass();
-            // 类地址
-            container.put("class",targetClassClass.toGenericString());
-            // 方法名称
-            container.put("methodName",method.getName());
-            // 包名称
-            container.put("package",targetClassClass.getPackage());
-            // 参数列表
-            for (int i = 0; i < params.length; i++) {
-                container.put(String.valueOf(i),params[i]);
-            }
-            // 转为JSON字符串
-            String jsonString = JSON.toJSONString(container);
-            // 做SHA256 Hash计算，得到一个SHA256摘要作为Key
-            return DigestUtils.sha256Hex(jsonString);
-        };
-    }
-
-    @Bean
-    @Override
-    public CacheErrorHandler errorHandler() {
-        // 异常处理，当Redis发生异常时，打印日志，但是程序正常走
-        log.info("初始化 -> [{}]", "Redis CacheErrorHandler");
-        return new CacheErrorHandler() {
-            @Override
-            public void handleCacheGetError(RuntimeException e, Cache cache, Object key) {
-                log.error("Redis occur handleCacheGetError：key -> [{}]", key, e);
-            }
-
-            @Override
-            public void handleCachePutError(RuntimeException e, Cache cache, Object key, Object value) {
-                log.error("Redis occur handleCachePutError：key -> [{}]；value -> [{}]", key, value, e);
-            }
-
-            @Override
-            public void handleCacheEvictError(RuntimeException e, Cache cache, Object key) {
-                log.error("Redis occur handleCacheEvictError：key -> [{}]", key, e);
-            }
-
-            @Override
-            public void handleCacheClearError(RuntimeException e, Cache cache) {
-                log.error("Redis occur handleCacheClearError：", e);
-            }
-        };
-    }
-
-}
-
-/**
- * Value 序列化
- *
- * @author /
- * @param <T>
- */
- class FastJsonRedisSerializer<T> implements RedisSerializer<T> {
-
-    private Class<T> clazz;
-
-    FastJsonRedisSerializer(Class<T> clazz) {
-        super();
-        this.clazz = clazz;
-    }
-
-    @Override
-    public byte[] serialize(T t) {
-        if (t == null) {
-            return new byte[0];
-        }
-        return JSON.toJSONString(t, SerializerFeature.WriteClassName).getBytes(StandardCharsets.UTF_8);
-    }
-
-    @Override
-    public T deserialize(byte[] bytes) {
-        if (bytes == null || bytes.length <= 0) {
-            return null;
-        }
-        String str = new String(bytes, StandardCharsets.UTF_8);
-        return JSON.parseObject(str, clazz);
-    }
-
-}
-
-/**
- * 重写序列化器
- *
- * @author /
- */
-class StringRedisSerializer implements RedisSerializer<Object> {
-
-    private final Charset charset;
-
-    StringRedisSerializer() {
-        this(StandardCharsets.UTF_8);
-    }
-
-    private StringRedisSerializer(Charset charset) {
-        Assert.notNull(charset, "Charset must not be null!");
-        this.charset = charset;
-    }
-
-    @Override
-    public String deserialize(byte[] bytes) {
-        return (bytes == null ? null : new String(bytes, charset));
-    }
-
-    @Override
-    public byte[] serialize(Object object) {
-        String string = JSON.toJSONString(object);
-        if (StringUtils.isBlank(string)) {
-            return null;
-        }
-        string = string.replace("\"", "");
-        return string.getBytes(charset);
-    }
-}
-```
+配置文件位于 ```eladmin-common``` 模块中的 `me.zhengjie.config.RedisConfig`
 ### 缓存注解
+```
+@CacheConfig：主要用于配置该类中会用到的一些共用的缓存配置
 
-::: tip
+@Cacheable：主要方法的返回值将被加入缓存。在查询时，会先从缓存中获取，若不存在才再发起对数据库的访问
 
-建议注解加在实现类上和实现类的方法上
+@CachePut：主要用于数据新增和修改操作
 
-:::
+@CacheEvict：配置于函数上，通常用在删除方法上，用来从缓存中移除相应数据
+```
+### 使用建议
+缓存的出现加快了数据查询的速度，同时增加了维护成本，建议使用在高频读低频写的数据上。
 
-- @CacheConfig：主要用于配置该类中会用到的一些共用的缓存配置
-
-- @Cacheable：主要方法的返回值将被加入缓存。在查询时，会先从缓存中获取，若不存在才再发起对数据库的访问。
-
-- @CachePut：主要用于数据新增和修改操作
-
-- @CacheEvict：配置于函数上，通常用在删除方法上，用来从缓存中移除相应数据。
-
-
+使用不当可能会出现数据不一致的问题，请谨慎使用。
 ## 异常处理
 我们开发项目的时，数据在请求过程中发生错误是非常常见的事情。
 
-如：权限不足、数据唯一异常、数据不能为空异常、义务异常等。这些异常如果不经过处理会对前端开发人员和使用者造成不便，因此我们就需要统一处理他们。
+如：权限不足、数据唯一异常、数据不能为空异常、义务异常等。
+这些异常如果不经过处理会对前端开发人员和使用者造成不便，因此我们就需要统一处理他们。
 
 源码位于：源码位于：``` eladmin-common ``` 模块中的 `exception` 包中
 
@@ -579,8 +423,46 @@ public ResponseEntity create(@Validated @RequestBody User resources){
 ![](https://docs-1255840532.cos.ap-shanghai.myqcloud.com/2.png)
 
 ## 数据权限
-本系统是基于部门做的一个简单数据权限控制，也就是通过用户角色中的数据权限控制用户能看哪些数据。目前系统在 ```用户管理```、```部门管理```、```岗位管理```中加入了数据权限供大家测试
-### 角色数据权限
+
+本系统是基于部门做的一个简单数据权限控制，也就是通过用户角色中的数据权限控制用户能看哪些数据。
+
+实现思路就是通过获取角色中关联的部门ID，再通过 IN 查询，达到数据权限控制，前提是被查询的表中需要有 部门ID 的字段。
+### 注解方式
+
+现可通过注解 `@DataPermission` 进行权限控制
+
+**源码如下：**
+```java
+/**
+ * <p>
+ *   用于判断是否过滤数据权限
+ *   1、如果没有用到 @OneToOne 这种关联关系，只需要填写 fieldName [参考：DeptQueryCriteria.class]
+ *   2、如果用到了 @OneToOne ，fieldName 和 joinName 都需要填写，拿UserQueryCriteria.class举例:
+ *   应该是 @DataPermission(joinName = "dept", fieldName = "id")
+ * </p>
+ * @author Zheng Jie
+ * @website https://el-admin.vip
+ * @date 2020-05-07
+ **/
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface DataPermission {
+
+    /**
+     * Entity 中的字段名称
+     */
+    String fieldName() default "";
+
+    /**
+     * Entity 中与部门关联的字段名称
+     */
+    String joinName() default "";
+}
+```
+
+目前系统在 ```用户管理```、```部门管理``` 中加入了数据权限供大家测试，具体查看源码 
+
+### 数据权限
 系统提供了三种数据权限控制
 - 全部数据权限  无数据权限限制
 - 本级数据权限  限制只能看到本部门数据
@@ -588,54 +470,12 @@ public ResponseEntity create(@Validated @RequestBody User resources){
 
 ![](https://docs-1255840532.cos.ap-shanghai.myqcloud.com/sjqx.png)
 
-### 修改后端代码
-这里用岗位管理来举例，控制用户能看到哪些岗位数据，首先岗位的实体中需要关联部门，这里用的是一对一关联
-``` java
-@OneToOne
-@JoinColumn(name = "dept_id")
-private Dept dept;
-```
+### 代码参考
 
-**（1）在控制器中注入**
-```java
-@Autowired
-private DataScope dataScope;
-```
-**（2）在查询的方法中加入如下代码获取数据权限**
-
-```java
-@Log("查询岗位")
-@GetMapping(value = "/job")
-@PreAuthorize("hasAnyRole('ADMIN','USERJOB_ALL','USERJOB_SELECT','USER_ALL','USER_SELECT')")
-public ResponseEntity getJobs(@RequestParam(required = false) String name,
-                              @RequestParam(required = false) Long deptId,
-                              @RequestParam(required = false) Boolean enabled,
-                              Pageable pageable){
-    // 数据权限
-    Set<Long> deptIds = dataScope.getDeptIds();
-    return new ResponseEntity(jobQueryService.queryAll(name, enabled , deptIds, deptId, pageable),HttpStatus.OK);
-}
-```
-
-**（3）修改QueryService**
-```java
-@Override
-        public Predicate toPredicate(Root<Job> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
-
-            List<Predicate> list = new ArrayList<Predicate>();
-
-            // 数据权限
-            Join<Dept, Job> join = root.join("dept",JoinType.LEFT);
-            if (!CollectionUtils.isEmpty(deptIds)) {
-                list.add(join.get("id").in(deptIds));
-            }
-            Predicate[] p = new Predicate[list.size()];
-            return cb.and(list.toArray(p));
-        }
-```
+可参考 DeptQueryCriteria.class 中的写法，底层实现 QueryHelp.class 中的 42 行
 ## 定时任务
 对于简单的定时任务用 ```Spring```的 ```@Scheduled``` 注解即可，如需要动态管理定时任务就需要使用到 ```Quartz```。本系统的动态定时任务源码位于 ``` eldamin-system -> modules -> quartz ```，使用流程如下
-### 编写任务处理类
+### 任务处理类
 ```java
 @Slf4j
 @Component
@@ -651,6 +491,8 @@ public class TestTask {
 - Bean名称：Spring Bean名称，如： testTask
 - 方法名称：对应后台任务方法名称 方法参数：对应后台任务方法名称值，没有可不填 
 - cron表达式：可查询官方cron表达式介绍
+- 任务负责人与告警邮箱：支持多个邮箱，定时任务执行失败邮箱提醒
+- 子任务ID：现支持添加子任务，支持多个子任务，按顺序执行
 - 状态：是否启动定时任务
 
 ### 常用cron表达式
@@ -734,13 +576,9 @@ eladmin-common -> me.zhengjie.base
 
 ## 服务监控
 
-![](https://i.loli.net/2019/12/22/7PdAW4Dot9EGJkR.png)
+![](https://img.el-admin.xin/20200605155951.png)
 
-要使用服务监控功能，需要将 eladmin-monitor-2.4.jar 部署到需要监控的服务器上
-
-- Window服务器：请将eladmin\eladmin-monitor\src\main\resources目录下的sigar-x86-winnt.dll或者sigar-amd64-winnt.dll 放到java的bin目录下
-- Linux服务器：请将eladmin\eladmin-monitor\src\main\resources目录下的libsigar-x86-linux.so或者libsigar-amd64-linux.so 放到java的bin目录下
-- 将打包好的 eladmin-monitor-2.4.jar 放到服务器上，执行 nohup java -jar eladmin-monitor-2.4.jar >nohup.out 2>&1 & 即可
+![](https://img.el-admin.xin/20200605160022.png)
 
 ## 运维管理
 
@@ -921,6 +759,8 @@ private final static ThreadPoolExecutor executor = ThreadPoolExecutorUtil.getPol
 - StringUtils：字符串工具类
 - ThrowableUtil：异常工具，获取堆栈信息
 - ValidationUtil：验证工具
+- RsaUtils：可生成公钥私钥，加密解密功能
 
 #### 目录如下
-![](https://docs-1255840532.cos.ap-shanghai.myqcloud.com/util.png)
+
+![](https://img.el-admin.xin/20200605160509.png)

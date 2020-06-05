@@ -21,28 +21,33 @@ module.exports = {
         logo: '/logo/small.png',
         nav: [
             { text: '指南', link: '/guide/'},
+            { text: '日志', link: '/version/V2.5/'},
             { text: '捐赠', link: '/donation/'},
-            { text: 'v2.4', link: '/version/V2.4/'},
             { text: '体验', link: 'https://el-admin.xin'},
             { text: '博客', link: 'https://www.ydyno.com/'},
             // 下拉列表
             {
-                text: '项目地址',
+                text: 'Github',
                 items: [
                     {
-                        text: '前端(GitHub)',
+                        text: '前端源码',
                         link: 'https://github.com/elunez/eladmin-web'
                     },
                     {
-                        text: '后端(GitHub)',
+                        text: '后端源码',
                         link: 'https://github.com/elunez/eladmin'
                     },
+                ]
+            },
+            {
+                text: 'Gitee',
+                items: [
                     {
-                        text: '前端(码云)',
+                        text: '前端源码',
                         link: 'https://gitee.com/elunez/eladmin-web'
                     },
                     {
-                        text: '后端(码云)',
+                        text: '后端源码',
                         link: 'https://gitee.com/elunez/eladmin'
                     }
                 ]
@@ -67,16 +72,14 @@ module.exports = {
                     collapsable: false,
                     children: [
                         '/guide/cjwt',
-                        '/guide/rjrz',
-                        '/guide/gxdm',
-                        '/guide/bqsm'
+                        '/guide/gxdm'
                     ]
                 },
                 {
-                    title: '捐赠',
+                    title: '版权',
                     collapsable: false,
                     children: [
-                        '/guide/jzzc'
+                        '/guide/bqsm'
                     ]
                 }
             ],
@@ -85,7 +88,14 @@ module.exports = {
 
             ],
             '/version/': [
-                'V2.4',
+                {
+                    title: '更新日志',
+                    collapsable: true,
+                    children: [
+                        'V2.5',
+                        'V2.4'
+                    ]
+                }
             ]
         },
         // 假如你的文档仓库和项目本身不在一个仓库：

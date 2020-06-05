@@ -17,39 +17,6 @@ Consider defining a bean of type 'me.zhengjie.modules.system.service.mapper.User
 
 ![](https://docs-1255840532.cos.ap-shanghai.myqcloud.com/18750819445653.png)
 
-## autoType is not support
-出现这个错误可能的场景
-1. 修改了包名或路径
-2. 新增了一个模块或者实体
-
-不管是哪种场景，只需要在 ```RedisCofnig``` 中配置白名单即可，配置文件位于 ``` eladmin-common -> redis -> RedisCofnig```，部分代码如下：
-```java
-@Bean(name = "redisTemplate")
-    @ConditionalOnMissingBean(name = "redisTemplate")
-    public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<Object, Object> template = new RedisTemplate<>();
-        //序列化
-        FastJsonRedisSerializer fastJsonRedisSerializer = new FastJsonRedisSerializer(Object.class);
-        // value值的序列化采用fastJsonRedisSerializer
-        template.setValueSerializer(fastJsonRedisSerializer);
-        template.setHashValueSerializer(fastJsonRedisSerializer);
-
-        // 全局开启AutoType，不建议使用
-        // ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
-        // 建议使用这种方式，小范围指定白名单
-        ParserConfig.getGlobalInstance().addAccept("me.zhengjie.domain");
-        ParserConfig.getGlobalInstance().addAccept("me.zhengjie.modules.system.service.dto");
-        ParserConfig.getGlobalInstance().addAccept("me.zhengjie.modules.system.domain");
-        ParserConfig.getGlobalInstance().addAccept("me.zhengjie.modules.quartz.domain");
-        ParserConfig.getGlobalInstance().addAccept("me.zhengjie.modules.monitor.domain");
-        ParserConfig.getGlobalInstance().addAccept("me.zhengjie.modules.security.security");
-        // key的序列化采用StringRedisSerializer
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setConnectionFactory(redisConnectionFactory);
-        return template;
-    }
-```
 ## 关于如何获取当前登录的用户
 可以使用工具 ```SecurityUtils``` 获取当前用户
 ## 关于项目如何使用 MyBatis-Plus
