@@ -81,6 +81,13 @@ module.exports = {
                     children: [
                         '/guide/bqsm'
                     ]
+                },
+                {
+                    title: '鸣谢',
+                    collapsable: false,
+                    children: [
+                        '/guide/mx'
+                    ]
                 }
             ],
             '/donation/': [
