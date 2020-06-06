@@ -1,4 +1,37 @@
 # 后端手册
+## 项目模块
+这里演示使用 Idea 创建一个新的子模块
+### 新建模块
+选择 File -> New -> Module
+
+![](https://img.el-admin.xin/20200606132523.png)
+
+选择 Maven -> Next
+
+![](https://img.el-admin.xin/20200606132934.png)
+
+选择父模块 -> Finish
+
+![](https://img.el-admin.xin/20200606133131.png)
+
+回到项目，在新模块中创建包
+
+![](https://img.el-admin.xin/20200606134124.png)
+
+::: tip
+如果包名和 System 模块 me.zhengjie 不一样，那么需要在 AppRun.class 中配置扫描路径
+:::
+
+详见：[新建模块后访问接口 404](https://el-admin.vip/guide/cjwt.html#%E6%96%B0%E5%BB%BA%E6%A8%A1%E5%9D%97%E5%90%8E%E8%AE%BF%E9%97%AE%E6%8E%A5%E5%8F%A3-404)
+
+给新模块起一个名字
+
+![](https://img.el-admin.xin/20200606134512.png)
+
+最后在 System 模块的 pom.xml 的 dependencies 节点加入创建的子模块
+
+![](https://img.el-admin.xin/20200606134610.png)
+
 ## 权限控制
 本系统权限控制采用 `RBAC` 思想。简单地说，一个用户拥有若干角色，每一个角色拥有若干个菜单，菜单中存在菜单权限与按钮权限，
 这样，就构造成“用户-角色-菜单” 的授权模型。在这种模型中，用户与角色、角色与菜单之间构成了多对多的关系，如下图
@@ -585,11 +618,11 @@ eladmin-common -> me.zhengjie.base
 ![QQ截图20191222113815.png](https://i.loli.net/2019/12/22/b769oHckuaKdlpA.png)
 
 使用步骤：
-### 1、添加一个服务器
+### 新增服务器
 
 ![QQ截图20191222125954.png](https://i.loli.net/2019/12/22/Jnwz1BsG8RbtOvf.png)
 
-### 2、新增一个应用
+### 新增应用
 
 这里用 `eladmin-monitor-2.4.jar` 来举例，设置应用名称与目录，然后编写脚本即可
 
