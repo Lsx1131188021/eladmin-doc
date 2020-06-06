@@ -1,8 +1,9 @@
 # 前端手册
 ## 菜单路由
 通过用户的角色返回相应的菜单路由，前端关键代码： ```src/router/index.js```<br>
+
 ```js
-# 部分代码
+ // 部分代码
  store.dispatch('GetInfo').then(res => { // 拉取user_info
           // 动态路由，拉取菜单
           loadMenus(next, to)
@@ -69,18 +70,29 @@ meta: {
 
 ####  (1) 添加外链
 
-![](https://i.loli.net/2019/11/01/YiWyKBOFd4z1ngu.png)
+外链菜单路由地址必须带上 `https://` 或者 `http://`，并且外链菜单选择 `是`
 
- #### (2) 添加内部菜单
+![](https://img.el-admin.xin/20200606135654.png)
 
-组件路径为 src/views
+ #### (2) 内部菜单
+
+- 外链菜单：这个选择否就好
+- 菜单缓存：选择为 `是` 那么切换到其他菜单当前菜单会缓存
+- 菜单课件：如果不想在左侧显示，可以选择为 `否`
+- 路由地址：这个就是浏览器访问菜单的地址
+- 组件名称：这个非必填，如果设置了菜单缓存，那么必填，不然缓存会无效
+- 组件路径：项目的组件文件的路径 src/views
 
 |   添加内部菜单  |   组件路径对应  |
 |--- | --- |
 | ![](https://i.loli.net/2019/11/01/qQCV2xUdcZj4sSo.png) |  ![](https://i.loli.net/2019/05/27/5cebafaaa946592632.png)   |
 
-#### (3) 分配菜单
-分配菜单需要在角色管理中操作
+### 分配菜单
+
+创建完菜单还需要在角色管理中给角色分配菜单
+
+![](https://img.el-admin.xin/20200606140433.png)
+
 ### 权限控制
 可以引入权限判断函数或者使用全局指令函数实现前端的权限控制<br>
 1、使用全局指令函数```  v-permission="" ```
@@ -122,64 +134,54 @@ export default{
 
 具体查看源码
 
-## 异常处理
-在 ```src/utils/request.js``` 文件中对所有的 ```request```请求进行拦截，通过``` response``` 拦截器对接口返回的状态码进行分析与异常处理，部分代码如下
-```js
-// response 拦截器
-service.interceptors.response.use(
-  response => {
-    const code = response.status
-    if (code < 200 || code > 300) {
-      Notification.error({
-        title: response.message
-      })
-      return Promise.reject('error')
-    } else {
-      return response.data
-    }
-  },
-  error => {
-    let code = 0
-    try {
-      code = error.response.data.status
-    } catch (e) {
-      if (error.toString().indexOf('timeout')) {
-        Notification.error({
-          title: '请求超时',
-          duration: 2500
-        })
-        return Promise.reject(error)
-      }
-    }
-    if (code === 401) {
-      MessageBox.confirm(
-        '登录状态已失效，你可以取消继续留在该页面，或者重新登录',
-        '提示',
-        {
-          confirmButtonText: '重新登录',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      ).then(() => {
-        store.dispatch('LogOut').then(() => {
-          location.reload() // 为了重新实例化vue-router对象 避免bug
-        })
-      })
-    } else if (code === 403) {
-      router.push({ path: '/401' })
-    } else {
-      const errorMsg = error.response.data.message
-      if (errorMsg !== undefined) {
-        Notification.error({
-          title: errorMsg,
-          duration: 2500
-        })
-      }
-    }
-    return Promise.reject(error)
+## 自定义主键
+
+系统里面默认的主键是 id，如果主键字段不是 id 使用 curd 组件就会出现问题，这个时候需要自定义主键名称
+
+在 index.vue 中找到下面节点，并且指定 idField， 由于系统默认是根据 id 字段降序，所以这里排序规则也需要修改
+
+![](https://img.el-admin.xin/20200606142345.png)
+
+```vue
+cruds() {
+    return CRUD({ title: '图片', idField: 'pictureId', sort: 'pictureId,desc', url: 'api/pictures', crudMethod: { ...crudPic }})
   }
-)
 ```
+
+## 多字段排序
+多字段排序方式在 crud.js 中的注释中说明了，这里再写个例子
+
+![](https://img.el-admin.xin/20200606142345.png)
+
+代码如下：
+
+```vue
+cruds() {
+    return CRUD({ title: '图片', sort: ['id,asc', 'name,desc'], url: 'api/pictures', crudMethod: { ...crudPic }})
+  }
+```
+
+## 操作按钮隐藏
+
+找到如下节点，在 optShow 中设置表格上方的按钮显与隐
+
+```vue
+cruds() {
+    return [
+      CRUD({ title: '字典详情', url: 'api/dictDetail', query: { dictName: '' }, sort: ['dictSort,asc', 'id,desc'],
+        crudMethod: { ...crudDictDetail },
+        optShow: {
+          add: true,
+          edit: true,
+          del: true,
+          reset: false
+        },
+        queryOnPresenterCreated: false
+      })
+    ]
+  }
+```
+
 ## 数据字典
 
 首先我们需要在字典管理中创建一个字典，页面如下
@@ -259,6 +261,105 @@ export default {
         <el-radio v-for="item in dicts" :key="item.id" v-model="form.enabled" :label="item.value">{{ item.label }}</el-radio>
  </el-form-item>
 ```
+## 文件上传
+
+上传文件时接口都是需要带上 Token 才能访问的，因此需要组件支持 Header 配置，详细代码见
+
+`tools->picture->index.vue`
+
+### 获取Token
+
+```vue
+import { getToken } from '@/utils/auth'
+
+data() {
+    return {
+      headers: {
+        'Authorization': getToken()
+      }
+    }
+  }
+```
+
+### 配置组件
+
+指定 Header `:headers="headers"`
+
+```vue
+<!--上传图片-->
+<el-upload
+:on-preview="handlePictureCardPreview"
+:before-remove="handleBeforeRemove"
+:on-success="handleSuccess"
+:on-error="handleError"
+:headers="headers"
+:file-list="fileList"
+:action="imagesUploadApi"
+list-type="picture-card"
+>
+<i class="el-icon-plus" />
+</el-upload>
+```
+
+## 异常处理
+在 ```src/utils/request.js``` 文件中对所有的 ```request```请求进行拦截，
+通过``` response``` 拦截器对接口返回的状态码进行分析与异常处理，代码如下
+```js
+// response 拦截器
+service.interceptors.response.use(
+  response => {
+    const code = response.status
+    if (code < 200 || code > 300) {
+      Notification.error({
+        title: response.message
+      })
+      return Promise.reject('error')
+    } else {
+      return response.data
+    }
+  },
+  error => {
+    let code = 0
+    try {
+      code = error.response.data.status
+    } catch (e) {
+      if (error.toString().indexOf('Error: timeout') !== -1) {
+        Notification.error({
+          title: '网络请求超时',
+          duration: 5000
+        })
+        return Promise.reject(error)
+      }
+    }
+    if (code) {
+      if (code === 401) {
+        store.dispatch('LogOut').then(() => {
+          // 用户登录界面提示
+          Cookies.set('point', 401)
+          location.reload()
+        })
+      } else if (code === 403) {
+        router.push({ path: '/401' })
+      } else {
+        const errorMsg = error.response.data.message
+        if (errorMsg !== undefined) {
+          Notification.error({
+            title: errorMsg,
+            duration: 5000
+          })
+        }
+      }
+    } else {
+      Notification.error({
+        title: '接口请求失败',
+        duration: 5000
+      })
+    }
+    return Promise.reject(error)
+  }
+)
+```
+
 ## 系统组件
 在这里列出系统使用到的组件，方便大家使用
 - 树形表格：[使用文档](https://panjiachen.github.io/vue-element-admin-site/zh/feature/component/tree-table.html#%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B)
