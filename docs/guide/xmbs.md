@@ -1,9 +1,13 @@
 # 部署项目
-本项目可以使用 `tomcat` 或者 `ngnix` 部署，在这里分享下 使用 `nginx` 部署前后端的步骤
+本项目可以使用 `tomcat` 或者 `nginx` 部署，在这里分享下 使用 `nginx` 部署前后端的步骤
+## SSH 工具
+先分享个好用的ssh工具[Windows、MacOS]，后面部署会使用到
+
+[FinalShell](http://www.hostbuf.com/t/988.html)
 
 ## 后端部署
 
-### 1、修改配置文件
+### 修改配置
 
 按需修改我们的 ```application-prod.yml```
 ```yaml
@@ -107,7 +111,7 @@ file:
   maxSize: 100
   avatarMaxSize: 5
 ```
-### 2、打包项目
+### 打包项目
 
 我们需要将项目打包并且上传到服务器
 
@@ -119,7 +123,7 @@ file:
 
 ![](https://img.el-admin.xin/20200605161831.png)
 
-### 3、编写脚本
+### 编写脚本
 
 编写脚步操作 ```java``` 服务
 
@@ -159,9 +163,9 @@ tail -f nohup.out
 # 查看日志
 ./log.sh
 ```
-### 4、配置 ```ngnix```
+### 配置 nginx
 
-我们可以使用 ```ngnix``` 代理 ```java```服务，添加配置
+我们可以使用 ```nginx``` 代理 ```java```服务，添加配置
 ```
 server {
     listen 80;
@@ -188,14 +192,12 @@ server {
 ### History 模式
 项目默认是 History 模式，所以直接打包即可
 #### 1、打包项目
-不管是将项目部署到 ```ngnix``` 还是其他服务器，都需要先将项目打包
+不管是将项目部署到 ```nginx``` 还是其他服务器，都需要先将项目打包
 ```
 npm run build:prod
 ```
 #### 2、上传文件
-打包完成后会在根目录生成 ```dist``` 文件夹，我们需要将他上传到服务器中，可使用ssh工具 
-
-[BvSshClient](https://www.lanzous.com/i3fbbgb)
+打包完成后会在根目录生成 ```dist``` 文件夹，我们需要将他上传到服务器中
 
 #### 3、Nginx 配置
 在 ```nginx/conf/nginx.conf```  添加配置
