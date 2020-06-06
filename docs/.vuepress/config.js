@@ -90,7 +90,7 @@ module.exports = {
             '/version/': [
                 {
                     title: '更新日志',
-                    collapsable: true,
+                    collapsable: false,
                     children: [
                         'V2.5',
                         'V2.4'
