@@ -1,3 +1,7 @@
+---
+comment: false 
+---
+
 # 快速了解
 ## 项目简介
 EL-ADMIN 基于 Spring Boot 2.1.0 、 Spring Boot Jpa、 JWT、Spring Security、Redis、Vue、Element-UI 的前后端分离的后台管理系统，

@@ -1,3 +1,7 @@
+---
+comment: false 
+---
+
 # 部署项目
 本项目可以使用 `tomcat` 或者 `nginx` 部署，在这里分享下 使用 `nginx` 部署前后端的步骤
 ## SSH 工具
