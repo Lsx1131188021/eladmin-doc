@@ -5,6 +5,7 @@ module.exports = {
             choosen: 'gitalk',
             // options选项中的所有参数，会传给Valine的配置
             options: {
+                id: '留言板',
                 clientID: '08f039f9aac8015220ab',
                 clientSecret: 'b98a7d05379a0ffc7ad8d6332bee85b3790332c4',
                 repo: 'eladmin-doc',
